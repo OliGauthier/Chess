@@ -23,9 +23,9 @@ namespace Chess
             mainBoard = new Board();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
-            
-            
+            Form1 game = new Form1();
+            Application.Run(game);
+               
         }
 
 

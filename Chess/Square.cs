@@ -30,8 +30,9 @@ namespace Chess
             else
                 Color = Color.Beige;
             Name = $"{fileIntToString[file]}{rank+1}";
-            Corner = new Point(Form1.sizeOfSquare * File,Form1.sizeOfSquare*7-Form1.sizeOfSquare*rank);
+            Corner = new Point(Form1.widthOfSquare * File,Form1.widthOfSquare*7-Form1.widthOfSquare*rank);
             PosOfImage = new Point(Corner.X + 10, Corner.Y + 10);
+        
         }
 
 

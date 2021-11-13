@@ -59,6 +59,37 @@ namespace Chess
             //TO DO : implementer lecture des 5 pamètres restants
 
         }
+
+        public string CreateFenFromBoard()
+        {
+            string FEN = "";
+            int emptySpaceCounter = 0;
+            //read piece positions
+            for (int rank = 7; rank >= 0; rank--)
+            {
+                for (int file = 0; file < 8; file++)
+                {
+                    if (this.Grid[rank, file].Piece == null)
+                        emptySpaceCounter++;
+                    else
+                    {
+                        if(emptySpaceCounter!=0)
+                            FEN += emptySpaceCounter.ToString();
+                        emptySpaceCounter = 0;
+                        FEN+=this.Grid[rank, file].Piece.PieceType;
+                    }
+                }
+                if (emptySpaceCounter != 0)
+                    FEN += emptySpaceCounter.ToString();
+                emptySpaceCounter = 0;
+                if (rank!=0)
+                    FEN += "/";
+            }
+
+            return FEN;
+        
+        }
+
         //TO DO : board constructor from specific FEN
     }
 }
