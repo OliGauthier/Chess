@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Windows.Media;
 
 namespace Chess
 {
@@ -11,7 +12,8 @@ namespace Chess
     {
         public static Board mainBoard;
         public static Image blackB, blackK, blackQ, blackN, blackP, blackR, whiteB, whiteK, whiteQ, whiteN, whiteP, whiteR;
-        public static int sizeOfPieces = 60;
+        public static Cursor cursorBlackB, cursorblackK, cursorblackQ, cursorblackN, cursorblackP, cursorblackR, cursorwhiteB, cursorwhiteK, cursorwhiteQ, cursorwhiteN, cursorwhiteP, cursorwhiteR;
+        public static int sizeOfPieces = 60, sizeOfIcons=76;
 
         /// <summary>
         /// The main entry point for the application.
@@ -20,6 +22,7 @@ namespace Chess
         static void Main()
         {
             InitializePiecesImages();
+            InitializePieceCursors();
             mainBoard = new Board();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -46,6 +49,24 @@ namespace Chess
             whiteN = resizeImage(Image.FromFile("wN.png"), new Size(sizeOfPieces, sizeOfPieces));
             whiteP = resizeImage(Image.FromFile("wP.png"), new Size(sizeOfPieces, sizeOfPieces));
             whiteR = resizeImage(Image.FromFile("wR.png"), new Size(sizeOfPieces, sizeOfPieces));
+        }
+        /*
+         Function that intializes the cursors for each piece
+             */
+        static void InitializePieceCursors()
+        {
+            cursorBlackB = createCursorFromImage(blackB, new Size(sizeOfIcons, sizeOfIcons));
+            cursorblackK = createCursorFromImage(blackK, new Size(sizeOfIcons, sizeOfIcons));
+            cursorblackQ = createCursorFromImage(blackQ, new Size(sizeOfIcons, sizeOfIcons));
+            cursorblackN = createCursorFromImage(blackN, new Size(sizeOfIcons, sizeOfIcons));
+            cursorblackP = createCursorFromImage(blackP, new Size(sizeOfIcons, sizeOfIcons));
+            cursorblackR = createCursorFromImage(blackR, new Size(sizeOfIcons, sizeOfIcons));
+            cursorwhiteB = createCursorFromImage(whiteB, new Size(sizeOfIcons, sizeOfIcons));
+            cursorwhiteK = createCursorFromImage(whiteK, new Size(sizeOfIcons, sizeOfIcons));
+            cursorwhiteQ = createCursorFromImage(whiteQ, new Size(sizeOfIcons, sizeOfIcons));
+            cursorwhiteN = createCursorFromImage(whiteN, new Size(sizeOfIcons, sizeOfIcons));
+            cursorwhiteP = createCursorFromImage(whiteP, new Size(sizeOfIcons, sizeOfIcons));
+            cursorwhiteR = createCursorFromImage(whiteR, new Size(sizeOfIcons, sizeOfIcons));
         }
 
         /*
@@ -80,6 +101,15 @@ namespace Chess
             g.DrawImage(imgToResize, 0, 0, destWidth, destHeight);
             g.Dispose();
             return (System.Drawing.Image)b;
+        }
+
+        /*
+         Function that creates a cursor object from any image to a specified size
+             */
+        private static Cursor createCursorFromImage(Image img, Size size)
+        {
+            Bitmap bm = new Bitmap(img);
+            return new Cursor(bm.GetHicon());
         }
     }
 }

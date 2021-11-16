@@ -20,8 +20,8 @@ namespace Chess
         public static (int,int) nextPos;
         public static bool inMove;
         public static MouseEventArgs previousMousePos = null;
-        public static int compteurDeMerde = 0;
-
+        public static int widthOfHighlight = 4;
+        public static List<(int, int)> highLightedSquares;
 
         public Form1()
         {
@@ -78,17 +78,21 @@ namespace Chess
 
         private void panel1_MouseDown(object sender, MouseEventArgs e)
         {
-            Graphics graph = panel1.CreateGraphics();
-
-            Point posImg = calculatePosOfImage(e.X, e.Y);
-            
-            (int, int) rankAndFile = calculateRankAndFile(e.X, e.Y);
-            if (Program.mainBoard.Grid[rankAndFile.Item1, rankAndFile.Item2].Piece != null)
+            Graphics graph = panel1.CreateGraphics();            
+            currentPos = calculateRankAndFile(e.X, e.Y);
+            if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece != null)
             {
-                graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[rankAndFile.Item1, rankAndFile.Item2].Color), new Rectangle(Program.mainBoard.Grid[rankAndFile.Item1, rankAndFile.Item2].Corner, sizeOfSquare));
-                currentPos = rankAndFile;
-                graph.DrawImage(Program.mainBoard.Grid[rankAndFile.Item1, rankAndFile.Item2].Piece.PieceImage, Program.mainBoard.Grid[rankAndFile.Item1, rankAndFile.Item2].PosOfImage);
-
+                this.Cursor = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceCursor;
+                graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Color), new Rectangle(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Corner, sizeOfSquare));
+                Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.CalculateAvaibleMoves(Program.mainBoard);
+                if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PossibleMoves.Count > 0)
+                {
+                    foreach ((int, int) pos in Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PossibleMoves)
+                    {
+                        graph.DrawRectangle(new Pen(Color.Red, widthOfHighlight), new Rectangle(Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.X + widthOfHighlight / 2, Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.Y + widthOfHighlight / 2, widthOfSquare - widthOfHighlight, widthOfSquare - widthOfHighlight));
+                    }
+                }
+                highLightedSquares = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PossibleMoves;
             }
             
             inMove = true;
@@ -99,7 +103,7 @@ namespace Chess
         private void panel1_MouseUp(object sender, MouseEventArgs e)
         {
             Graphics graph = panel1.CreateGraphics();
-
+            this.Cursor = Cursors.Default;
             (int, int) nextPos = calculateRankAndFile(e.X, e.Y);
             if (currentPos.Item1 != -1 & currentPos.Item2 != -1)
             { 
@@ -109,59 +113,17 @@ namespace Chess
                     graph.DrawImage(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].PosOfImage);
 
                     Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
-                    if(currentPos.Item1!=nextPos.Item1 || currentPos.Item2!=nextPos.Item2)
+                    Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
+                    if (currentPos.Item1!=nextPos.Item1 || currentPos.Item2!=nextPos.Item2)
                         Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece = null;
-
-
-                    //depending on where the piece is dropped in the square we may have to redraw other squares around it
-                    if (e.X % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & nextPos.Item2 < 7)//need to redraw right square
+                    if (highLightedSquares.Count > 0)
                     {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 + 1].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 + 1].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 + 1].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 + 1].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 + 1].PosOfImage);
+                        foreach ((int, int) pos in highLightedSquares)
+                        {
+                            graph.DrawRectangle(new Pen(Program.mainBoard.Grid[pos.Item1, pos.Item2].Color, widthOfHighlight), new Rectangle(Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.X + widthOfHighlight / 2, Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.Y + widthOfHighlight / 2, widthOfSquare- widthOfHighlight,widthOfSquare-widthOfHighlight));
+                        }
                     }
-                    if (e.X % widthOfSquare < Program.sizeOfPieces / 2 & nextPos.Item2 > 0)//need to redraw left square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].PosOfImage);
-                    }
-                    if (e.Y % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & nextPos.Item1 > 0)//need to redraw bottom square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2].PosOfImage);
-                    }
-                    if (e.Y % widthOfSquare < Program.sizeOfPieces / 2 & nextPos.Item1 < 7)//need to redraw top square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2].PosOfImage);
-                    }
-                    if ((e.X % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & nextPos.Item2 < 7) & (e.Y % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & nextPos.Item1 > 0) & (nextPos.Item1 > 0 & nextPos.Item2 < 7))//need to redraw bottom right square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 + 1].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 + 1].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 + 1].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 + 1].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 + 1].PosOfImage);
-                    }
-                    if ((e.X % widthOfSquare < Program.sizeOfPieces / 2 & nextPos.Item2 > 0) & (e.Y % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & nextPos.Item1 > 0) & (nextPos.Item1 > 0 & nextPos.Item2 > 0))//need to redraw bottom left square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 - 1].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 - 1].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 - 1].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 - 1].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1 - 1, nextPos.Item2 - 1].PosOfImage);
-                    }
-                    if ((e.X % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & nextPos.Item2 < 7) & (e.Y % widthOfSquare < Program.sizeOfPieces / 2 & nextPos.Item1 < 7) & (nextPos.Item1 < 7 & nextPos.Item2 < 7))//need to redraw top right square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 + 1].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 + 1].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 + 1].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 + 1].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 + 1].PosOfImage);
-                    }
-                    if ((e.X % widthOfSquare < Program.sizeOfPieces / 2 & nextPos.Item2 > 0) & (e.Y % widthOfSquare < Program.sizeOfPieces / 2 & nextPos.Item1 > 0) & (nextPos.Item1 < 7 & nextPos.Item2 > 0))//need to redraw top left square
-                    {
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 - 1].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 - 1].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 - 1].Piece != null & (nextPos.Item1 != currentPos.Item1 || nextPos.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 - 1].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1 + 1, nextPos.Item2 - 1].PosOfImage);
-                    }
+                    highLightedSquares = null;
                 }
             }
             inMove = false;
@@ -170,11 +132,7 @@ namespace Chess
             currentPos = (-1, -1);
         }
 
-        private Point calculatePosOfImage(int posX, int posY)
-        {
-            (int,int) pos = calculateRankAndFile(posX, posY);
-            return Program.mainBoard.Grid[pos.Item1, pos.Item2].PosOfImage;
-        }
+       
 
         private (int,int) calculateRankAndFile(int posX, int posY)
         {
@@ -183,88 +141,17 @@ namespace Chess
             return (rank, file);
         }
 
-        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        
+
+        
+
+        private void button1_Click(object sender, EventArgs e)
         {
-            if (e.X>0 & e.Y>0 & e.X<8*widthOfSquare & e.Y<8*widthOfSquare)
-            { Graphics graph = panel1.CreateGraphics();
-
-                if (inMove)
-                {
-                    if (previousMousePos != null)
-                    {
-                        //deals with the squares the cursor goes through but not the squares that overlap with the piece image
-                        (int, int) posCursor = calculateRankAndFile(previousMousePos.X, previousMousePos.Y);
-                        graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2].Corner, sizeOfSquare));
-                        if (Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2].Piece != null & (posCursor.Item1 != currentPos.Item1 & posCursor.Item2 != currentPos.Item2))
-                            graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2].PosOfImage);
-
-                        
-                        if (e.X % widthOfSquare > (widthOfSquare - Program.sizeOfPieces/2) & posCursor.Item2 < 7)//need to redraw right square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 + 1].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 + 1].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 + 1].Piece != null & (posCursor.Item1!=currentPos.Item1 || posCursor.Item2!=currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 + 1].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 + 1].PosOfImage);
-                        }
-                        if (e.X % widthOfSquare < Program.sizeOfPieces / 2 & posCursor.Item2 > 0)//need to redraw left square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 - 1].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 - 1].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 - 1].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 - 1].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1, posCursor.Item2 - 1].PosOfImage);
-                        }
-                        if (e.Y % widthOfSquare > (widthOfSquare - Program.sizeOfPieces/2) & posCursor.Item1 > 0)//need to redraw bottom square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2].PosOfImage);
-                        }
-                        if (e.Y % widthOfSquare < Program.sizeOfPieces / 2 & posCursor.Item1 < 7)//need to redraw top square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2].PosOfImage);
-                        }
-                        if ((e.X % widthOfSquare > (widthOfSquare - Program.sizeOfPieces/2) & posCursor.Item2 < 7) & (e.Y % widthOfSquare > (widthOfSquare - Program.sizeOfPieces/2) & posCursor.Item1 > 0) & (posCursor.Item1 > 0 & posCursor.Item2 < 7))//need to redraw bottom right square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 + 1].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 + 1].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 + 1].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 + 1].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 + 1].PosOfImage);
-                        }
-                        if ((e.X % widthOfSquare < Program.sizeOfPieces / 2 & posCursor.Item2 > 0) & (e.Y % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & posCursor.Item1 > 0) & (posCursor.Item1 > 0 & posCursor.Item2 > 0))//need to redraw bottom left square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 - 1].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 - 1].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 - 1].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 - 1].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1 - 1, posCursor.Item2 - 1].PosOfImage);
-                        }
-                        if ((e.X % widthOfSquare > (widthOfSquare - Program.sizeOfPieces / 2) & posCursor.Item2 < 7) & (e.Y % widthOfSquare < Program.sizeOfPieces / 2 & posCursor.Item1 < 7) & (posCursor.Item1 < 7 & posCursor.Item2 < 7))//need to redraw top right square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 + 1].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 + 1].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 + 1].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 + 1].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 + 1].PosOfImage);
-                        }
-                        if ((e.X % widthOfSquare < Program.sizeOfPieces / 2 & posCursor.Item2 > 0) & (e.Y % widthOfSquare < Program.sizeOfPieces / 2 & posCursor.Item1 > 0) & (posCursor.Item1 < 7 & posCursor.Item2 > 0))//need to redraw top left square
-                        {
-                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 - 1].Color), new Rectangle(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 - 1].Corner, sizeOfSquare));
-                            if (Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 - 1].Piece != null & (posCursor.Item1 != currentPos.Item1 || posCursor.Item2 != currentPos.Item2))
-                                graph.DrawImage(Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 - 1].Piece.PieceImage, Program.mainBoard.Grid[posCursor.Item1 + 1, posCursor.Item2 - 1].PosOfImage);
-                        }
-
-                    }
-                    if (currentPos.Item1 != -1)
-                        if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece != null)
-                            graph.DrawImage(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceImage, new Point(e.X-Program.sizeOfPieces/2, e.Y- Program.sizeOfPieces / 2));
-                    previousMousePos = e;
-                }
-            }
+            textBox3.Text += textBox2.Text;
+            textBox2.Text = "";
+            
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-            textBox1.Show();
-        }
-
-        private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-            textBox2.Show();
-        }
+        
     }
 }

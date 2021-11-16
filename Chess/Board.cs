@@ -50,7 +50,7 @@ namespace Chess
                 }
                 else
                 {
-                    this.Grid[rank, file].Piece = new Piece(FEN[counter].ToString(), new int[rank, file]);
+                    this.Grid[rank, file].Piece = new Piece(FEN[counter].ToString(), (rank, file));
                     file++;
                 }
                 counter++;
