@@ -24,8 +24,6 @@ namespace Chess
 
         public Piece(string pieceType, (int,int) startPos)
         {
-            if (pieceType == "R")
-                Console.WriteLine("L");
             PieceType = pieceType;
             switch (pieceType)
             {
@@ -98,9 +96,11 @@ namespace Chess
             PossibleMoves = new List<(int, int)>();
             if (shitcompeut == 1)
                 Console.WriteLine("");
-            if (PieceType == "R" || PieceType == "r")
+            //the qeen moves like a rook and a bishop so it uses both if statements
+            if (PieceType == "R" || PieceType == "r" || PieceType == "Q" || PieceType == "q" )
             {
-                for (int i = Position.Item1 - 1; i >= 0; i--)//check if can go down the ranks
+                //check if can go down the ranks
+                for (int i = Position.Item1 - 1; i >= 0; i--)
                 {
                     if (board.Grid[i, Position.Item2].Piece == null)
                         PossibleMoves.Add((i, Position.Item2));
@@ -112,7 +112,8 @@ namespace Chess
                         break;
                     }
                 }
-                for (int i = Position.Item1 + 1; i < 8; i++)//check if can go up the ranks
+                //check if can go up the ranks
+                for (int i = Position.Item1 + 1; i < 8; i++)
                 {
                     if(board.Grid[i, Position.Item2].Piece==null)
                         PossibleMoves.Add((i, Position.Item2));
@@ -124,7 +125,8 @@ namespace Chess
                         break;
                     }
                 }
-                for (int i = Position.Item2 - 1; i >= 0; i--)//check if can go left
+                //check if can towards a file
+                for (int i = Position.Item2 - 1; i >= 0; i--)
                 {
                     if (board.Grid[Position.Item1, i].Piece == null)
                         PossibleMoves.Add((Position.Item1, i));
@@ -136,6 +138,7 @@ namespace Chess
                         break;
                     }
                 }
+                //check if can go towards h file
                 for (int i = Position.Item2 + 1; i < 8; i++)//check if can go right
                 {
                     if (board.Grid[Position.Item1, i].Piece == null)
@@ -149,12 +152,179 @@ namespace Chess
                     }
                 }
             }
-            if (PieceType == "B" || PieceType == "b")
+            if (PieceType == "B" || PieceType == "b" || PieceType == "Q" || PieceType== "q")
             {
-                //for ()
-                //{ }
+                //check if can go down the ranks & towards a file
+                int movement = -1;
+                while (true)
+                {
+                    //square is inside the board
+                    if (Position.Item1 + movement >= 0 & Position.Item2 + movement >= 0)
+                    {
+                        if (board.Grid[Position.Item1 + movement, Position.Item2 + movement].Piece == null)
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement));
+                        else if (White == board.Grid[Position.Item1 + movement, Position.Item2 + movement].Piece.White)//piece is of same color as piece on the square it wants to move to
+                            break;
+                        else
+                        {
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement));
+                            break;
+                        }
+                    }
+                    else
+                        break;
+                    movement--;
+                }
+                //check if can go up the ranks & towards h file
+                movement = 1;
+                while (true)
+                {
+                    //square is inside the board
+                    if (Position.Item1 + movement <= 7 & Position.Item2 + movement <= 7)
+                    {
+                        if (board.Grid[Position.Item1 + movement, Position.Item2 + movement].Piece == null)
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement));
+                        else if (White == board.Grid[Position.Item1 + movement, Position.Item2 + movement].Piece.White)//piece is of same color as piece on the square it wants to move to
+                            break;
+                        else
+                        {
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement));
+                            break;
+                        }
+                    }
+                    else
+                        break;
+                    movement++;
+                }
+
+                //check if can go down the ranks & towards h file
+                movement = -1;
+                int movement2 = 1;
+                while (true)
+                {
+                    //square is inside the board
+                    if (Position.Item1 + movement >= 0 & Position.Item2 + movement2 <= 7)
+                    {
+                        if (board.Grid[Position.Item1 + movement, Position.Item2 + movement2].Piece == null)
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement2));
+                        else if (White == board.Grid[Position.Item1 + movement, Position.Item2 + movement2].Piece.White)//piece is of same color as piece on the square it wants to move to
+                            break;
+                        else
+                        {
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement2));
+                            break;
+                        }
+                    }
+                    else
+                        break;
+                    movement--;
+                    movement2++;
+                }
+                //check if can go up the ranks & towards a file
+                movement = 1;
+                movement2 = -1;
+                while (true)
+                {
+                    //square is inside the board
+                    if (Position.Item1 + movement <= 7 & Position.Item2 + movement2 >= 0)
+                    {
+                        if (board.Grid[Position.Item1 + movement, Position.Item2 + movement2].Piece == null)
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement2));
+                        else if (White == board.Grid[Position.Item1 + movement, Position.Item2 + movement2].Piece.White)//piece is of same color as piece on the square it wants to move to
+                            break;
+                        else
+                        {
+                            PossibleMoves.Add((Position.Item1 + movement, Position.Item2 + movement2));
+                            break;
+                        }
+                    }
+                    else
+                        break;
+                    movement++;
+                    movement2--;
+                }
+
+
             }
-            shitcompeut++;
+
+            if (PieceType == "N" || PieceType == "n")
+            {
+                (int, int)[] moves = { (2,1), (2,-1), (-2,1), (-2,-1), (1,2), (1,-2), (-1,2), (-1,-2) };
+                int rankDestination;
+                int fileDestination;
+                for (int i = 0; i < 8; i++)
+                {
+                    rankDestination = Position.Item1 + moves[i].Item1;
+                    fileDestination = Position.Item2 + moves[i].Item2;
+                    //square is inside the board
+                    if (rankDestination >= 0 && rankDestination <= 7 && fileDestination >= 0 && fileDestination <= 7)
+                    {
+                        if (board.Grid[rankDestination, fileDestination].Piece == null)
+                            PossibleMoves.Add((rankDestination, fileDestination));
+                        else if (White != board.Grid[rankDestination, fileDestination].Piece.White)//can move to square with piece of different color
+                            PossibleMoves.Add((rankDestination, fileDestination));
+                    }
+                }
+            }
+            if (PieceType == "K" || PieceType == "k")
+            {
+                (int, int)[] moves = { (1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (0, -1), (0, 1), (-1, 0) };
+                int rankDestination;
+                int fileDestination;
+                for (int i = 0; i < 8; i++)
+                {
+                    rankDestination = Position.Item1 + moves[i].Item1;
+                    fileDestination = Position.Item2 + moves[i].Item2;
+                    //square is inside the board
+                    if (rankDestination >= 0 && rankDestination <= 7 && fileDestination >= 0 && fileDestination <= 7)
+                    {
+                        if (board.Grid[rankDestination, fileDestination].Piece == null)
+                            PossibleMoves.Add((rankDestination, fileDestination));
+                        else if (White != board.Grid[rankDestination, fileDestination].Piece.White)//can move to square with piece of different color
+                            PossibleMoves.Add((rankDestination, fileDestination));
+                    }
+                }
+                //TO DO : Handle castling using current FEN
+            }
+
+            if (PieceType == "P" || PieceType == "p")
+            {
+                
+                int forward1, forward2, startRank;
+                if (PieceType == "P")
+                {
+                    startRank = 1;
+                    forward1 = 1;
+                    forward2 = 2;
+                }
+                else
+                {
+                    startRank = 6;
+                    forward1 = -1;
+                    forward2 = -2;
+                }
+                //capturable piece
+                if(Position.Item2 + 1 <= 7)
+                    if (board.Grid[Position.Item1 + forward1, Position.Item2 + 1].Piece != null)
+                        if (White != board.Grid[Position.Item1 + forward1, Position.Item2 + 1].Piece.White)
+                            PossibleMoves.Add((Position.Item1 + forward1, Position.Item2 + 1));
+                if(Position.Item2 -1 >=0)    
+                    if (board.Grid[Position.Item1 + forward1, Position.Item2 - 1].Piece != null)
+                        if (White != board.Grid[Position.Item1 + forward1, Position.Item2 - 1].Piece.White)
+                            PossibleMoves.Add((Position.Item1 + forward1, Position.Item2 - 1));
+
+                //one move ahead
+                if (board.Grid[Position.Item1 + forward1, Position.Item2].Piece == null)
+                {
+                    PossibleMoves.Add((Position.Item1 + forward1, Position.Item2));
+                    //if we are on the recond second rank we could move two squares ahead
+                    if (Position.Item1 == startRank & board.Grid[Position.Item1 + forward2, Position.Item2].Piece == null)
+                        PossibleMoves.Add((Position.Item1 + forward2, Position.Item2));
+                }
+                
+                
+
+            }
         }
     }
 }

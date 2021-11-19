@@ -96,7 +96,7 @@ namespace Chess
             }
             
             inMove = true;
-
+            panel4.Visible = false;
         }
 
 
@@ -107,20 +107,41 @@ namespace Chess
             (int, int) nextPos = calculateRankAndFile(e.X, e.Y);
             if (currentPos.Item1 != -1 & currentPos.Item2 != -1)
             { 
+                //if you took a piece
                 if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece != null)
                 {
-                    graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner, sizeOfSquare));
-                    graph.DrawImage(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].PosOfImage);
+                    //if the square the piece is dropped in is a legal one
+                    if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PossibleMoves.Contains((nextPos.Item1, nextPos.Item2)))
+                    {
+                        //if its a white pawn reaching the last rank
+                        if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceType == "P" & nextPos.Item1 == 7)
+                        {
+                            panel4.Location = new Point(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner.X,0);
+                            panel4.Visible = true;
+                        }
+                        //if its a black pawn reaching the last rank
+                        else if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceType == "p" & nextPos.Item1 == 0)
+                        { }
+                        
+                        //redraw the destination square in case there was a piece
+                        if(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece!=null)
+                            graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner, sizeOfSquare));
+                        graph.DrawImage(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].PosOfImage);
 
-                    Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
-                    Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
-                    if (currentPos.Item1!=nextPos.Item1 || currentPos.Item2!=nextPos.Item2)
-                        Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece = null;
+                        Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
+                        Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
+                        if (currentPos.Item1 != nextPos.Item1 || currentPos.Item2 != nextPos.Item2)
+                            Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece = null;
+                        
+                    }
+                    else
+                        graph.DrawImage(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].PosOfImage);
+                    //removes all hightlighted squares
                     if (highLightedSquares.Count > 0)
                     {
                         foreach ((int, int) pos in highLightedSquares)
                         {
-                            graph.DrawRectangle(new Pen(Program.mainBoard.Grid[pos.Item1, pos.Item2].Color, widthOfHighlight), new Rectangle(Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.X + widthOfHighlight / 2, Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.Y + widthOfHighlight / 2, widthOfSquare- widthOfHighlight,widthOfSquare-widthOfHighlight));
+                            graph.DrawRectangle(new Pen(Program.mainBoard.Grid[pos.Item1, pos.Item2].Color, widthOfHighlight), new Rectangle(Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.X + widthOfHighlight / 2, Program.mainBoard.Grid[pos.Item1, pos.Item2].Corner.Y + widthOfHighlight / 2, widthOfSquare - widthOfHighlight, widthOfSquare - widthOfHighlight));
                         }
                     }
                     highLightedSquares = null;
@@ -152,6 +173,23 @@ namespace Chess
             
         }
 
-        
+        private void panel4_MouseClick(object sender, MouseEventArgs e)
+        {
+            
+        }
+
+        private void panel4_Paint(object sender, PaintEventArgs e)
+        {
+            Graphics graph = panel4.CreateGraphics();
+            graph.DrawImage(Program.whiteQ, (Program.sizeOfPieces - panel4.Width) / 2, (Program.sizeOfPieces - panel4.Height) / 2);
+            graph.DrawImage(Program.whiteN, panel4.Width + (Program.sizeOfPieces - panel4.Width) / 2, (Program.sizeOfPieces - panel4.Height) / 2);
+            graph.DrawImage(Program.whiteQ, (Program.sizeOfPieces - panel4.Width) / 2, panel4.Height + (Program.sizeOfPieces - panel4.Height) / 2);
+            graph.DrawImage(Program.whiteQ, panel4.Width + (Program.sizeOfPieces - panel4.Width) / 2, panel4.Height + (Program.sizeOfPieces - panel4.Height) / 2);
+        }
+
+        private void panel5_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
     }
 }
