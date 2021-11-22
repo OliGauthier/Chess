@@ -22,6 +22,8 @@ namespace Chess
         public static MouseEventArgs previousMousePos = null;
         public static int widthOfHighlight = 4;
         public static List<(int, int)> highLightedSquares;
+        public static string pieceToAdd=null;
+        TaskCompletionSource<bool> task = null;
 
         public Form1()
         {
@@ -75,7 +77,7 @@ namespace Chess
                 graph.DrawString($"{8 - i}", SystemFonts.DefaultFont, new SolidBrush(Color.Black), new Point(0, i * widthOfSquare + widthOfSquare / 2));
         }
 
-
+        //raise a piece
         private void panel1_MouseDown(object sender, MouseEventArgs e)
         {
             Graphics graph = panel1.CreateGraphics();            
@@ -96,11 +98,10 @@ namespace Chess
             }
             
             inMove = true;
-            panel4.Visible = false;
         }
 
-
-        private void panel1_MouseUp(object sender, MouseEventArgs e)
+        //drop a piece
+        private async void panel1_MouseUp(object sender, MouseEventArgs e)
         {
             Graphics graph = panel1.CreateGraphics();
             this.Cursor = Cursors.Default;
@@ -110,26 +111,76 @@ namespace Chess
                 //if you took a piece
                 if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece != null)
                 {
-                    //if the square the piece is dropped in is a legal one
+                    //if the square the piece is dropped in is a legal one 
+                    //TO DO : also check the legality of the move with respect to checks and all that
                     if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PossibleMoves.Contains((nextPos.Item1, nextPos.Item2)))
                     {
+                        //previous enpassant move is no longer possible
+                        Program.mainBoard.EnPassantPossible = null;
+
                         //if its a white pawn reaching the last rank
                         if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceType == "P" & nextPos.Item1 == 7)
                         {
-                            panel4.Location = new Point(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner.X,0);
+                            if (nextPos.Item2 < 7)
+                                panel4.Location = new Point(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner.X, 0);
+                            else//other wise it goes out of the board
+                                panel4.Location = new Point(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].Corner.X, 0);
                             panel4.Visible = true;
+                            pieceToAdd = null;
+                            task = new TaskCompletionSource<bool>();
+                            await task.Task;
+                            panel4.Visible = false;
+                            if (pieceToAdd != null)
+                            {
+                                Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = new Piece(pieceToAdd,nextPos);
+                            }
                         }
                         //if its a black pawn reaching the last rank
                         else if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceType == "p" & nextPos.Item1 == 0)
-                        { }
+                        {
+                            if (nextPos.Item2 < 7)
+                                panel5.Location = new Point(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner.X, 6 * widthOfSquare);
+                            else
+                                panel5.Location = new Point(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2 - 1].Corner.X, 6 * widthOfSquare);
+                            panel5.Visible = true;
+                            pieceToAdd = null;
+                            task = new TaskCompletionSource<bool>();
+                            await task.Task;
+                            panel5.Visible=false;
+                            if (pieceToAdd != null)
+                            {
+                                Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = new Piece(pieceToAdd, nextPos);
+                            }
+                        }
+                        //if it'S a white pawn moving two forward, en passant is possible
+                        else if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceType == "P" & nextPos.Item1 == 3 & currentPos.Item1 == 1)
+                        {
+                            Program.mainBoard.EnPassantPossible = Program.mainBoard.Grid[2,nextPos.Item2].Name;
+                            Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
+                            Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
+                        }
+                        //if it'S a white pawn moving two forward, en passant is possible
+                        else if (Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceType == "p" & nextPos.Item1 == 4 & currentPos.Item1 == 6)
+                        {
+                            Program.mainBoard.EnPassantPossible = Program.mainBoard.Grid[5, nextPos.Item2].Name;
+                            Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
+                            Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
+                        }
+                        //TO DO : implement castling
+                        //else if(its a fking king)
+                        else //any other sort of move
+                        { 
+                            Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
+                            Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
+                        }
                         
                         //redraw the destination square in case there was a piece
                         if(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece!=null)
                             graph.FillRectangle(new SolidBrush(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Color), new Rectangle(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Corner, sizeOfSquare));
-                        graph.DrawImage(Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].PosOfImage);
+                        graph.DrawImage(Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.PieceImage, Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].PosOfImage);
 
-                        Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece = Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece;
-                        Program.mainBoard.Grid[nextPos.Item1, nextPos.Item2].Piece.Position = nextPos;
+                        
+                        
                         if (currentPos.Item1 != nextPos.Item1 || currentPos.Item2 != nextPos.Item2)
                             Program.mainBoard.Grid[currentPos.Item1, currentPos.Item2].Piece = null;
                         
@@ -154,18 +205,14 @@ namespace Chess
         }
 
        
-
+        //gives the rank and file from two positions (cursor usually)
         private (int,int) calculateRankAndFile(int posX, int posY)
         {
-            int file = posX / 80;
-            int rank = 7 - posY / 80;
+            int file = posX / widthOfSquare;
+            int rank = 7 - posY / widthOfSquare;
             return (rank, file);
         }
-
-        
-
-        
-
+        //
         private void button1_Click(object sender, EventArgs e)
         {
             textBox3.Text += textBox2.Text;
@@ -173,23 +220,72 @@ namespace Chess
             
         }
 
+        //panel used by white to promote
         private void panel4_MouseClick(object sender, MouseEventArgs e)
         {
-            
+            pieceToAdd=null;//default value which means we clicked outside the panel
+            //click the queen
+            if (e.X >= 0 & e.X < panel4.Width / 2 & e.Y >= 0 & e.Y < panel4.Height / 2)
+                pieceToAdd = "Q";
+            //click the knight
+            else if (e.X >= panel4.Width / 20 & e.X < panel4.Width & e.Y >= 0 & e.Y < panel4.Height / 2)
+                pieceToAdd = "N";
+            //click the rook (just a queen with broken legs tbh)
+            else if (e.X >= 0 & e.X < panel4.Width / 2 & e.Y >= panel4.Height / 2 & e.Y < panel4.Height)
+                pieceToAdd = "R";
+            //click the bishop (honestly why would someone do this except to troll)
+            else if (e.X >= panel4.Width / 20 & e.X < panel4.Width & e.Y >= panel4.Height / 2 & e.Y < panel4.Height)
+                pieceToAdd = "B";
+            //click outside the panel to actually make a different move
+           
+            task?.TrySetResult(true);
         }
-
+        //panel used by white to promote
         private void panel4_Paint(object sender, PaintEventArgs e)
         {
             Graphics graph = panel4.CreateGraphics();
-            graph.DrawImage(Program.whiteQ, (Program.sizeOfPieces - panel4.Width) / 2, (Program.sizeOfPieces - panel4.Height) / 2);
-            graph.DrawImage(Program.whiteN, panel4.Width + (Program.sizeOfPieces - panel4.Width) / 2, (Program.sizeOfPieces - panel4.Height) / 2);
-            graph.DrawImage(Program.whiteQ, (Program.sizeOfPieces - panel4.Width) / 2, panel4.Height + (Program.sizeOfPieces - panel4.Height) / 2);
-            graph.DrawImage(Program.whiteQ, panel4.Width + (Program.sizeOfPieces - panel4.Width) / 2, panel4.Height + (Program.sizeOfPieces - panel4.Height) / 2);
+            graph.DrawImage(Program.whiteQ, (panel4.Width / 2 - Program.sizeOfPieces) / 2, (panel4.Height / 2 - Program.sizeOfPieces) / 2);
+            graph.DrawImage(Program.whiteN, panel4.Width / 2 + (panel4.Width / 2 - Program.sizeOfPieces) / 2, (panel4.Height / 2 - Program.sizeOfPieces) / 2);
+            graph.DrawImage(Program.whiteR, (panel4.Width / 2 - Program.sizeOfPieces) / 2, panel4.Height / 2 + (panel4.Height / 2 - Program.sizeOfPieces) / 2);
+            graph.DrawImage(Program.whiteB, panel4.Width / 2 + (panel4.Width / 2 - Program.sizeOfPieces) / 2, panel4.Height / 2 + (panel4.Height / 2 - Program.sizeOfPieces) / 2);
         }
-
+        //panel used by black to promote
         private void panel5_Paint(object sender, PaintEventArgs e)
         {
+            Graphics graph = panel5.CreateGraphics();
+            graph.DrawImage(Program.blackQ, (panel5.Width / 2 - Program.sizeOfPieces) / 2, (panel5.Height / 2 - Program.sizeOfPieces) / 2);
+            graph.DrawImage(Program.blackN, panel5.Width / 2 + (panel5.Width / 2 - Program.sizeOfPieces) / 2, (panel5.Height / 2 - Program.sizeOfPieces) / 2);
+            graph.DrawImage(Program.blackR, (panel5.Width / 2 - Program.sizeOfPieces) / 2, panel5.Height / 2 + (panel5.Height / 2 - Program.sizeOfPieces) / 2);
+            graph.DrawImage(Program.blackB, panel5.Width / 2 + (panel5.Width / 2 - Program.sizeOfPieces) / 2, panel5.Height / 2 + (panel5.Height / 2 - Program.sizeOfPieces) / 2);
+        }
+        //panel used by black to promote
+        private void panel5_MouseClick(object sender, MouseEventArgs e)
+        {
+            pieceToAdd = null;//default value which means we clicked outside the panel
+            //click the queen
+            if (e.X >= 0 & e.X < panel5.Width / 2 & e.Y >= 0 & e.Y < panel5.Height / 2)
+                pieceToAdd = "q";
+            //click the knight
+            else if (e.X >= panel5.Width / 20 & e.X < panel5.Width & e.Y >= 0 & e.Y < panel5.Height / 2)
+                pieceToAdd = "n";
+            //click the rook (just a queen with broken legs tbh)
+            else if (e.X >= 0 & e.X < panel5.Width / 2 & e.Y >= panel5.Height / 2 & e.Y < panel5.Height)
+                pieceToAdd = "r";
+            //click the bishop (honestly why would someone do this except to troll)
+            else if (e.X >= panel5.Width / 20 & e.X < panel5.Width & e.Y >= panel5.Height / 2 & e.Y < panel5.Height)
+                pieceToAdd = "b";
+            //click outside the panel to actually make a different move
 
+            task?.TrySetResult(true);
+        }
+
+        private void panel1_MouseClick(object sender, MouseEventArgs e)
+        {
+            //bullshit to get around the fact that the mouse click methods don't fire for panels if you don't click in them (duh)
+            if(panel4.Visible)
+                task?.TrySetResult(true);
+            else if(panel5.Visible)
+                task?.TrySetResult(true);
         }
     }
 }

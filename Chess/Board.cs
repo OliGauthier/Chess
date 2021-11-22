@@ -12,6 +12,17 @@ namespace Chess
         static readonly string StartFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
         static readonly int Size = 8;
+
+        public bool WhiteCanCastleK { get; set; } 
+        public bool WhiteCanCastleQ { get; set; }
+        public bool BlackCanCastleK { get; set; }
+        public bool BlackCanCastleQ { get; set; }
+        public bool WhiteTurn { get; set; }
+
+        public string EnPassantPossible { get; set; }
+
+        public int TurnCount { get; set; }
+        public int MoveCounter_50rule { get; set; }
         public Square[,] Grid { get; set; }//1st param is the rank, second param is the file
 
         public Board()
@@ -33,13 +44,13 @@ namespace Chess
         public void FillBoardFromFEN(string FEN)
         {
             //TO DO : check for valid FEN
-
+            bool isNumeric;
 
             int file = 0, rank = 7, counter = 0;
             while (FEN[counter].ToString() != " ")
             {
                 //skip the right number of squares that are empty
-                bool isNumeric = int.TryParse(FEN[counter].ToString(), out int step);
+                isNumeric = int.TryParse(FEN[counter].ToString(), out int step);
                 if (isNumeric)
                     file += step;
                 //start the next rank
@@ -55,8 +66,58 @@ namespace Chess
                 }
                 counter++;
             }
-
-            //TO DO : implementer lecture des 5 pamètres restants
+            counter++;
+            //check who's turn it is
+            if (FEN[counter].ToString() == "w")
+                WhiteTurn = true;
+            else if (FEN[counter].ToString() == "b")
+                WhiteTurn = false;
+            //check what are the possible castles
+            counter += 2;
+                BlackCanCastleK = false;
+                BlackCanCastleQ = false;
+                WhiteCanCastleK = false;
+                WhiteCanCastleQ = false;
+            if (FEN[counter].ToString() == "-")
+                counter++;
+            else 
+            {
+                while (FEN[counter].ToString() != " ")
+                {
+                    if (FEN[counter].ToString() == "K")
+                        WhiteCanCastleK = true;
+                    else if (FEN[counter].ToString() == "Q")
+                        WhiteCanCastleQ = true;
+                    else if (FEN[counter].ToString() == "k")
+                        BlackCanCastleK = true;
+                    else if (FEN[counter].ToString() == "q")
+                        BlackCanCastleQ = true;
+                    counter++;
+                }
+            }
+            counter++;
+            // check if en passant is possible (possible pp crusher)
+            if (FEN[counter].ToString() == "-")
+                EnPassantPossible = null;
+            else
+            {
+                EnPassantPossible = FEN[counter].ToString();
+                counter++;
+                EnPassantPossible += FEN[counter].ToString();
+            }
+            //check for 50 move rule
+            counter += 2;
+            isNumeric = int.TryParse(FEN[counter].ToString(), out int number);
+            if (isNumeric)
+                MoveCounter_50rule = number;
+            else
+                MoveCounter_50rule = 0;
+            counter += 2;
+            isNumeric = int.TryParse(FEN[counter].ToString(), out number);
+            if (isNumeric)
+                TurnCount = number;
+            else
+                TurnCount = 1;
 
         }
 
@@ -85,6 +146,8 @@ namespace Chess
                 if (rank!=0)
                     FEN += "/";
             }
+            //TO DO : 5 last params
+
 
             return FEN;
         

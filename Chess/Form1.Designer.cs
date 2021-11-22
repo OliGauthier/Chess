@@ -51,6 +51,7 @@
             this.panel1.Size = new System.Drawing.Size(640, 640);
             this.panel1.TabIndex = 0;
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
+            this.panel1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseClick);
             this.panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             this.panel1.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseUp);
             // 
@@ -62,8 +63,9 @@
             this.panel5.Name = "panel5";
             this.panel5.Size = new System.Drawing.Size(160, 160);
             this.panel5.TabIndex = 1;
-            //this.panel5.Visible = false;
+            this.panel5.Visible = false;
             this.panel5.Paint += new System.Windows.Forms.PaintEventHandler(this.panel5_Paint);
+            this.panel5.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel5_MouseClick);
             // 
             // panel4
             // 
@@ -72,8 +74,8 @@
             this.panel4.Location = new System.Drawing.Point(0, 0);
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(160, 160);
-            this.panel4.TabIndex = 0;
-            //this.panel4.Visible = false;
+            this.panel4.TabIndex = 1;
+            this.panel4.Visible = false;
             this.panel4.Paint += new System.Windows.Forms.PaintEventHandler(this.panel4_Paint);
             this.panel4.MouseClick += new System.Windows.Forms.MouseEventHandler(this.panel4_MouseClick);
             // 
