@@ -10,7 +10,8 @@ namespace Chess
     class Board
     {
         static readonly string StartFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
+        static readonly string NoMinorPiecesFen = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w KQkq - 0 1";
+        static readonly string EnPassantFen = "r3k2r/p1p1p1p1/8/1P1P1P1P/1p1p1p1p/8/P1P1P1P1/R3K2R w KQkq - 0 1";
         static readonly int Size = 8;
 
         public bool WhiteCanCastleK { get; set; } 
@@ -146,8 +147,33 @@ namespace Chess
                 if (rank!=0)
                     FEN += "/";
             }
-            //TO DO : 5 last params
-
+            
+            //player turn
+            FEN += " ";
+            if (WhiteTurn)
+                FEN += "w";
+            else
+                FEN += "b";
+            //possible castles
+            FEN += " ";
+            if (WhiteCanCastleK)
+                FEN += "K";
+            if (WhiteCanCastleQ)
+                FEN += "Q";
+            if (BlackCanCastleK)
+                FEN += "k";
+            if (BlackCanCastleQ)
+                FEN += "q";
+            if (WhiteCanCastleK || WhiteCanCastleQ || BlackCanCastleK || BlackCanCastleQ)//pas rajouter un white space si aucun castle possible
+                FEN += " ";
+            //TO DO : en passant
+            if (EnPassantPossible != null)
+                FEN += EnPassantPossible;
+            else
+                FEN += "-";
+            //50 move rule and turn count
+            FEN += $" {MoveCounter_50rule} {TurnCount}";
+            
 
             return FEN;
         

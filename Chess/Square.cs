@@ -35,6 +35,25 @@ namespace Chess
         
         }
 
+        static public (int, int) GetIndexesBasedOnName(string name)
+        {
+            int column = 0;//file
+            while (column < 8)
+            {
+                if (name.Contains(fileIntToString[column]))
+                    break;
+                column++;
+            }
+            int row = 0;
+            while (row < 8)
+            {
+                if (name.Contains((row + 1).ToString()))
+                    break;
+                row++;
+            }
+            return (row,column);
+        }
+
 
     }
 }

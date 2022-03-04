@@ -285,6 +285,20 @@ namespace Chess
                     }
                 }
                 //TO DO : Handle castling using current FEN
+                if (PieceType == "K")
+                {
+                    if (board.WhiteCanCastleK & board.Grid[Position.Item1, Position.Item2 + 1].Piece == null & board.Grid[Position.Item1, Position.Item2 + 2].Piece == null)
+                        PossibleMoves.Add((Position.Item1, Position.Item2 + 2));
+                    if (board.WhiteCanCastleQ & board.Grid[Position.Item1, Position.Item2 - 1].Piece == null & board.Grid[Position.Item1, Position.Item2 - 2].Piece == null & board.Grid[Position.Item1, Position.Item2 - 3].Piece == null)
+                        PossibleMoves.Add((Position.Item1, Position.Item2 -2));
+                }
+                else if (PieceType == "k")
+                {
+                    if (board.BlackCanCastleK & board.Grid[Position.Item1, Position.Item2 + 1].Piece == null & board.Grid[Position.Item1, Position.Item2 + 2].Piece == null)
+                        PossibleMoves.Add((Position.Item1, Position.Item2 + 2));
+                    if (board.BlackCanCastleQ & board.Grid[Position.Item1, Position.Item2 - 1].Piece == null & board.Grid[Position.Item1, Position.Item2 - 2].Piece == null & board.Grid[Position.Item1, Position.Item2 - 3].Piece == null)
+                        PossibleMoves.Add((Position.Item1, Position.Item2 - 2));
+                }
             }
 
             if (PieceType == "P" || PieceType == "p")
@@ -321,7 +335,16 @@ namespace Chess
                     if (Position.Item1 == startRank & board.Grid[Position.Item1 + forward2, Position.Item2].Piece == null)
                         PossibleMoves.Add((Position.Item1 + forward2, Position.Item2));
                 }
-                
+                //en passant
+                if (board.EnPassantPossible != null)
+                {
+                    (int, int) enPassantSquare = Square.GetIndexesBasedOnName(board.EnPassantPossible);
+                    if (PieceType == "P" & ((Position.Item1 + 1, Position.Item2 + 1) == enPassantSquare || (Position.Item1 + 1, Position.Item2 - 1) == enPassantSquare))
+                        PossibleMoves.Add(enPassantSquare);
+                    else if(PieceType == "p" & ((Position.Item1 - 1, Position.Item2 + 1) == enPassantSquare || (Position.Item1 - 1, Position.Item2 - 1) == enPassantSquare))
+                        PossibleMoves.Add(enPassantSquare);
+
+                }
                 
 
             }
